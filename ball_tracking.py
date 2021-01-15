@@ -115,7 +115,7 @@ while True:
 	ballCoordinates[0] = x
 	ballCoordinates[1] = y
 	if not(firstPackage):
-		ser.write(b's')
+		ser.write(b's') # start serial port communication
 		numBytesWritten = ser.write(frameSize)
 		firstPackage = True
 	ser.write(b'h')
