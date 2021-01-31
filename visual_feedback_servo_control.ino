@@ -21,7 +21,7 @@ void loop()
   if (!firstFrame) {
     if (Serial.read() == 's') {
       firstFrame = true;
-      Serial.readBytes((byte*)cam0.deactivate, 4);
+      Serial.readBytes((byte*)cam0.frameSize, 4);
       maxDistance = sqrt(pow(cam0.frameSize[0]/2, 2) + pow(cam0.frameSize[1]/2, 2)); 
     }
   }
