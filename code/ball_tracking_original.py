@@ -6,14 +6,7 @@ import argparse
 import cv2
 import imutils
 import time
-import sys
-import serial
 
-# create serial port to send ball center pixel coordinates to Arduino
-ser = serial.Serial('/dev/ttyACM0') # ttyACM0 can be different, check it at Arduino IDE side
-ser.baudrate = 57600
-firstPackage = False # we will use this flag to initialize
-# serial port communication below
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video",
@@ -45,6 +38,7 @@ time.sleep(2.0)
 while True:
 	# grab the current frame
 	frame = vs.read()
+
 	# handle the frame from VideoCapture or VideoStream
 	frame = frame[1] if args.get("video", False) else frame
 
@@ -56,9 +50,6 @@ while True:
 	# resize the frame, blur it, and convert it to the HSV
 	# color space
 	frame = imutils.resize(frame, width=600)
-	frameSize = np.zeros(2, dtype='uint16') # width, height
-	frameSize[0] = np.size(frame, 1) # width
-	frameSize[1] = np.size(frame, 0) # height
 	blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 	hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
@@ -78,8 +69,9 @@ while True:
 
 	# only proceed if at least one contour was found
 	if len(cnts) > 0:
-		# find the largest contour in the mask, then use it to compute 
-		# the minimum enclosing circle and centroid
+		# find the largest contour in the mask, then use
+		# it to compute the minimum enclosing circle and
+		# centroid
 		c = max(cnts, key=cv2.contourArea)
 		((x, y), radius) = cv2.minEnclosingCircle(c)
 		M = cv2.moments(c)
@@ -98,7 +90,8 @@ while True:
 
 	# loop over the set of tracked points
 	for i in range(1, len(pts)):
-		# if either of the tracked points are None, ignore them
+		# if either of the tracked points are None, ignore
+		# them
 		if pts[i - 1] is None or pts[i] is None:
 			continue
 
@@ -109,17 +102,6 @@ while True:
 
 	# show the frame to our screen
 	cv2.imshow("Frame", frame)
-	# print("x", int(x), "y", int(y), type(x), sys.getsizeof(x))
-	# print(width, height)
-	ballCoordinates = np.zeros(2, dtype='uint16')
-	ballCoordinates[0] = x
-	ballCoordinates[1] = y
-	if not(firstPackage):
-		ser.write(b's') # start serial port communication
-		numBytesWritten = ser.write(frameSize)
-		firstPackage = True
-	ser.write(b'h')
-	numBytesWritten = ser.write(ballCoordinates) # numBytesWritten should be 4
 	key = cv2.waitKey(1) & 0xFF
 
 	# if the 'q' key is pressed, stop the loop
